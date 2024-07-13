@@ -28,9 +28,22 @@ features:
     - historical_volatility_30d
     - historical_volatility_60d
     - volume_oi_ratio
-  technical: []  # We'll add these back later
-  advanced: []   # We'll add these back later
-  fundamental: []  # We'll add these back later
+  technical:
+    - rsi
+    - macd
+    - bollinger_bands
+    - moving_average_50
+    - moving_average_200
+  advanced:
+    - implied_volatility
+    - delta
+    - gamma
+    - theta
+    - vega
+  fundamental:
+    - pe_ratio
+    - dividend_yield
+    - beta
 
 # Add a new section for model parameters
 model_params:
