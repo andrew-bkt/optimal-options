@@ -21,6 +21,10 @@ data:
 
 # Feature engineering parameters
 features:
+  types:
+    - basic
+    - technical
+    - advanced
   basic:
     - moneyness
     - time_to_expiry
@@ -44,6 +48,12 @@ features:
     - pe_ratio
     - dividend_yield
     - beta
+
+target:
+  type: profit  # or 'delta_profit' to use the new target
+  params:
+    profit_threshold: 0.005
+    delta_threshold: 0.5  # This will be ignored for 'profit' target type
 
 # Add a new section for model parameters
 model_params:

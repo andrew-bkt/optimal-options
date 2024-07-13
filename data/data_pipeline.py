@@ -4,8 +4,7 @@ from datetime import datetime
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from .data_fetcher import OptionDataFetcher
-from features.feature_engineer import FeatureEngineer
-from features.advanced_features import AdvancedFeatureEngineer
+from features.feature_factory import FeatureFactory
 from utils.logger import app_logger as logger
 
 class DataPipeline:
@@ -43,13 +42,18 @@ class DataPipeline:
                 logger.warning(f"No valid data for {ticker}. Skipping this ticker.")
                 return None
             
-            feature_engineer = FeatureEngineer(calls, underlying, expiration_date)
-            calls_with_features = feature_engineer.engineer_features()
-            
-            logger.debug(f"Shape of calls data after feature engineering: {calls_with_features.shape}")
-            logger.debug(f"Columns after feature engineering: {calls_with_features.columns}")
-            
-            calls_with_target = feature_engineer.create_target(calls_with_features)
+            feature_types = self.config.get_nested('features', 'types')
+            for feature_type in feature_types:
+                feature_engineer = FeatureFactory.create_feature_engineer(feature_type, calls, underlying, expiration_date)
+                calls = feature_engineer.engineer_features()
+
+            target_config = self.config.get('target')
+            if target_config['type'] == 'delta_profit' and 'delta' not in calls.columns:
+                advanced_engineer = FeatureFactory.create_feature_engineer('advanced', calls, underlying, expiration_date)
+                calls = advanced_engineer.engineer_features()
+
+            target_engineer = FeatureFactory.create_target_engineer(target_config['type'], calls, underlying, **target_config.get('params', {}))
+            calls_with_target = target_engineer.create_target()
             
             if len(calls_with_target) > 0:
                 calls_with_target['ticker'] = ticker

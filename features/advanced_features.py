@@ -1,14 +1,20 @@
 # options_screening/features/advanced_features.py
-
+from .base_feature_engineer import BaseFeatureEngineer
 import numpy as np
-import pandas as pd
 from scipy.stats import norm
 
-class AdvancedFeatureEngineer:
-    def __init__(self, calls, underlying, risk_free_rate=0.05):
-        self.calls = calls
-        self.underlying = underlying
+class AdvancedFeatureEngineer(BaseFeatureEngineer):
+    def __init__(self, calls, underlying, expiration_date, risk_free_rate=0.05):
+        super().__init__(calls, underlying, expiration_date)
         self.risk_free_rate = risk_free_rate
+
+    def engineer_features(self):
+        self._calculate_implied_volatility()
+        self._calculate_greeks()
+        self._calculate_price_ratios()
+        self._calculate_volatility_ratios()
+        
+        return self.calls
 
     def calculate_implied_volatility(self):
         # This is a simplified IV calculation. For real-world use, consider using a more robust method.
