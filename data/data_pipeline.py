@@ -34,29 +34,53 @@ class DataPipeline:
             data_fetcher = OptionDataFetcher(ticker, start_date, end_date)
             calls, underlying, expiration_date = data_fetcher.fetch_data()
             
+            logger.debug(f"Shape of calls data: {calls.shape}")
+            logger.debug(f"Shape of underlying data: {underlying.shape}")
+            logger.debug(f"Columns in calls data: {calls.columns}")
+            logger.debug(f"Columns in underlying data: {underlying.columns}")
+            
+            if calls.empty or underlying.empty:
+                logger.warning(f"No valid data for {ticker}. Skipping this ticker.")
+                return None
+            
             feature_engineer = FeatureEngineer(calls, underlying, expiration_date)
             calls_with_features = feature_engineer.engineer_features()
             
-            advanced_engineer = AdvancedFeatureEngineer(calls_with_features, underlying)
-            calls_with_advanced_features = advanced_engineer.engineer_features()
+            logger.debug(f"Shape of calls data after feature engineering: {calls_with_features.shape}")
+            logger.debug(f"Columns after feature engineering: {calls_with_features.columns}")
             
-            calls_with_target = feature_engineer.create_target(calls_with_advanced_features)
+            calls_with_target = feature_engineer.create_target(calls_with_features)
             
             if len(calls_with_target) > 0:
                 calls_with_target['ticker'] = ticker
+                logger.info(f"Successfully processed data for {ticker}")
                 return calls_with_target
             else:
-                logger.warning(f"No valid data for {ticker}. Skipping this ticker.")
+                logger.warning(f"No valid data for {ticker} after processing. Skipping this ticker.")
                 return None
         
         except Exception as e:
             logger.error(f"An error occurred while processing {ticker}: {str(e)}")
             return None
 
+
             
     def preprocess_data(self, data):
-        feature_columns = self.config.get_nested('features', 'basic') + self.config.get_nested('features', 'advanced')
-        X = data[feature_columns]
+        feature_columns = (
+            self.config.get_nested('features', 'basic') +
+            self.config.get_nested('features', 'technical') +
+            self.config.get_nested('features', 'advanced') +
+            self.config.get_nested('features', 'fundamental')
+        )
+        
+        # Check which columns are actually present in the data
+        available_columns = [col for col in feature_columns if col in data.columns]
+        missing_columns = set(feature_columns) - set(available_columns)
+        
+        if missing_columns:
+            logger.warning(f"The following columns are missing from the data: {missing_columns}")
+        
+        X = data[available_columns]
         y = data['target']
         
         # Check for NaN values
