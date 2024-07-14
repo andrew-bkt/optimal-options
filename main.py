@@ -27,11 +27,16 @@ def main():
         logger.info(f"Final shape of target vector y: {y.shape}")
         logger.info(f"Features used: {X.columns.tolist()}")
 
+        results_manager = ResultsManager(config)
+
         for model_config in config.get('models'):
-            logger.info(f"Training {model_config['name']} model...")
+            logger.info(f"Training and cross-validating {model_config['name']} model...")
             model = ModelFactory.create_model(model_config['type'], X, y, model_config['params'])
             model.train()
-            results_manager.save_results(model_config['name'], model, X)
+            results_manager.save_results(model_config['name'], model, X, y)
+
+        results_manager.plot_model_comparison()
+        results_manager.print_summary()
 
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")

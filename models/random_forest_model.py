@@ -35,3 +35,8 @@ class RandomForestModel(BaseModel):
         if self.model is None:
             raise ValueError("Model has not been trained yet. Call train() first.")
         return pd.DataFrame({'feature': feature_names, 'importance': self.model.feature_importances_}).sort_values('importance', ascending=False)
+
+    def predict_proba(self, X):
+        if self.model is None:
+            raise ValueError("Model has not been trained yet. Call train() first.")
+        return self.model.predict_proba(X)

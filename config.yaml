@@ -55,6 +55,9 @@ target:
     profit_threshold: 0.005
     delta_threshold: 0.5  # This will be ignored for 'profit' target type
 
+cross_validation:
+  n_folds: 5
+
 # Add a new section for model parameters
 model_params:
   neural_network:
